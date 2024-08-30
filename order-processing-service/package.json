@@ -1,0 +1,24 @@
+{
+  "name": "order-processing-service",
+  "version": "1.0.0",
+  "description": "Order Processing Service for Flipzon Flash Sale System",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "test": "jest",
+    "test:unit": "jest src/tests/unit",
+    "test:integration": "jest src/tests/integration"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "mongodb": "^4.1.0",
+    "ioredis": "^5.3.2",
+    "joi": "^17.4.2",
+    "winston": "^3.3.3",
+    "node-fetch": "^2.6.1"
+  },
+  "devDependencies": {
+    "jest": "^27.0.6",
+    "supertest": "^6.1.3"
+  }
+}
