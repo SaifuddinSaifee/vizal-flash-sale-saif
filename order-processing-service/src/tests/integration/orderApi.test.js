@@ -23,6 +23,7 @@ describe("Order API", () => {
 
   afterAll(async () => {
     await connection.close();
+    await new Promise(resolve => setTimeout(() => resolve(), 1000)); // Add a small delay
   });
 
   beforeEach(async () => {

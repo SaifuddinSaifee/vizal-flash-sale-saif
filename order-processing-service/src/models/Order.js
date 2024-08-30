@@ -1,5 +1,6 @@
 const { getDb } = require("../config/mongodb");
 const logger = require("../utils/logger");
+const { ObjectId } = require('mongodb');
 
 class Order {
   static async create(orderData) {
@@ -20,9 +21,9 @@ class Order {
   static async getById(orderId) {
     const db = getDb();
     try {
-      return await db.collection("orders").findOne({ _id: orderId });
+      return await db.collection('orders').findOne({ _id: new ObjectId(orderId) });
     } catch (error) {
-      logger.error("Error fetching order:", error);
+      logger.error('Error fetching order:', error);
       throw error;
     }
   }
