@@ -2,7 +2,7 @@
 
 ## 1. System Overview
 
-This document outlines the architecture for a high-performance Flash Sale system designed to sell 1000 iPhones at 12 AM on an upcoming Sunday. The system is built to handle high concurrency, maintain data consistency, and provide a fair purchasing experience for all users.
+This document provides an overview of the architecture and outlines how the system will deliver high performance for a flash sale involving 1,000 iPhones. It is designed to handle a large number of concurrent users while ensuring a fair experience for everyone.
 
 ## 2. Architecture Components
 
