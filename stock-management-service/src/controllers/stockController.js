@@ -59,7 +59,12 @@ class StockController {
    */
   static async reserveStock(req, res) {
     try {
-      const { quantity } = req.body;
+      const { quantity, user_authentication_token } = req.body;
+      // Here you would typically validate the user_authentication_token, we'll just log it
+      logger.info(
+        `Reservation attempt with token: ${user_authentication_token}`
+      );
+
       const result = await StockService.reserveStock(quantity);
       if (result.success) {
         res.json(result);

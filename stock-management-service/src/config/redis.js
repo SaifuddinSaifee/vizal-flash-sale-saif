@@ -1,5 +1,5 @@
-const Redis = require('ioredis');
-const logger = require('../utils/logger');
+const Redis = require("ioredis");
+const logger = require("../utils/logger");
 
 class RedisClient {
   /**
@@ -9,7 +9,7 @@ class RedisClient {
    */
   constructor() {
     this.client = new Redis({
-      host: process.env.REDIS_HOST || 'localhost',
+      host: process.env.REDIS_HOST || "localhost",
       port: process.env.REDIS_PORT || 6379,
       password: process.env.REDIS_PASSWORD,
       db: process.env.REDIS_DB || 0,
@@ -19,7 +19,7 @@ class RedisClient {
         return delay;
       },
       reconnectOnError(err) {
-        const targetError = 'READONLY';
+        const targetError = "READONLY";
         if (err.message.includes(targetError)) {
           // Only reconnect when the error contains "READONLY"
           return true;
@@ -27,19 +27,19 @@ class RedisClient {
       },
     });
 
-    this.client.on('error', (error) => {
-      logger.error('Redis connection error:', error);
+    this.client.on("error", (error) => {
+      logger.error("Redis connection error:", error);
     });
 
-    this.client.on('connect', () => {
-      logger.info('Connected to Redis');
+    this.client.on("connect", () => {
+      logger.info("Connected to Redis");
     });
 
-    this.client.on('ready', () => {
-      logger.info('Redis client ready');
+    this.client.on("ready", () => {
+      logger.info("Redis client ready");
     });
 
-    this.client.on('reconnecting', (delay) => {
+    this.client.on("reconnecting", (delay) => {
       logger.warn(`Redis client reconnecting after ${delay}ms`);
     });
   }
@@ -77,7 +77,6 @@ class RedisClient {
     }
   }
 
-
   /**
    * Decrements the value of a Redis key by 1.
    * @param {string} key The Redis key to decrement.
@@ -110,7 +109,6 @@ class RedisClient {
       throw error;
     }
   }
-
 
   async incrBy(key, increment) {
     try {
@@ -156,7 +154,6 @@ class RedisClient {
       throw error;
     }
   }
-
 
   /**
    * Returns a Redis multi command object which can be used to batch commands
