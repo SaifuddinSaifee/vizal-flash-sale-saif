@@ -1,3 +1,7 @@
+# System Achitecture
+
+![System Architecture](<assets/System Architecture.svg>)
+
 # Flash Sale System Assumptions
 
 1. Sale Specifics:
