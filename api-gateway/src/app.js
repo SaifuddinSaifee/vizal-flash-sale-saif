@@ -2,18 +2,16 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const cors = require('cors');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 const config = require('./config/config');
-const authRoutes = require('./routes/authRoutes');
-const orderRoutes = require('./routes/orderRoutes');
-const stockRoutes = require('./routes/stockRoutes');
 const logger = require('./utils/logger');
 
 const app = express();
 
 // Middleware
-app.use(helmet()); // Set security HTTP headers
-app.use(cors()); // Enable CORS for all routes
-app.use(express.json()); // Parse JSON bodies
+app.use(helmet());
+app.use(cors());
+app.use(express.json());
 
 // Rate limiting
 const limiter = rateLimit({
@@ -22,10 +20,26 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// Routes
-app.use('/auth', authRoutes);
-app.use('/orders', orderRoutes);
-app.use('/stock', stockRoutes);
+// Auth Service Proxy
+app.use('/auth', createProxyMiddleware({ 
+  target: config.AUTH_SERVICE_URL,
+  changeOrigin: true,
+  pathRewrite: {'^/auth' : '/api/auth'}
+}));
+
+// Order Service Proxy
+app.use('/orders', createProxyMiddleware({ 
+  target: config.ORDER_SERVICE_URL,
+  changeOrigin: true,
+  pathRewrite: {'^/orders' : '/api/orders'}
+}));
+
+// Stock Service Proxy
+app.use('/stock', createProxyMiddleware({ 
+  target: config.STOCK_SERVICE_URL,
+  changeOrigin: true,
+  pathRewrite: {'^/stock' : '/api/stock'}
+}));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -34,7 +48,7 @@ app.use((err, req, res, next) => {
 });
 
 // Start the server
-const PORT = config.PORT;
+const PORT = config.PORT || 3000;
 app.listen(PORT, () => {
   logger.info(`API Gateway running on port ${PORT}`);
 });
