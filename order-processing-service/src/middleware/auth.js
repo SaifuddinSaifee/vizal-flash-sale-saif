@@ -1,15 +1,15 @@
 const logger = require('../utils/logger');
 
 const authenticateUser = (req, res, next) => {
-  // This is a placeholder for actual authentication logic
-  const token = req.headers['user_authentication_token'];
+  const token = req.header('user_authentication_token');
+  
   if (!token) {
-    logger.warn('Authentication failed: No token provided');
+    logger.warn('Authentication attempt without token');
     return res.status(401).json({ error: 'Authentication required' });
   }
 
-  // Here we would typically validate the token, for now we'll just pass it through
-  req.userId = 'user_' + token.substr(-4); // Last 4 characters of token as user ID
+  // For this simplified version, we're assuming all non-empty tokens are valid instead of validatng the token here
+  req.user = { id: token.substr(0, 10) }; // Use first 10 chars of token as user ID
   next();
 };
 

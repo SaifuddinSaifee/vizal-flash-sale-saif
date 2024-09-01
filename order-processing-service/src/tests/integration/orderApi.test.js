@@ -1,6 +1,8 @@
+// src/tests/integration/orderApi.test.js
+
 const request = require("supertest");
-const { MongoClient } = require("mongodb");
-const { app, connectToDb } = require("../../app");
+const { MongoClient, ObjectId } = require("mongodb");
+const { app, connectToDb, getDb } = require("../../app");
 const stockService = require("../../services/stockService");
 
 jest.mock("../../services/stockService");
@@ -10,7 +12,6 @@ describe("Order API", () => {
   let db;
 
   beforeAll(async () => {
-    await connectToDb();
     connection = await MongoClient.connect(
       process.env.MONGODB_URI || "mongodb://localhost:27017/flipzon_test",
       {
@@ -19,11 +20,13 @@ describe("Order API", () => {
       }
     );
     db = await connection.db();
+    await connectToDb();
   });
 
   afterAll(async () => {
     await connection.close();
-    await new Promise(resolve => setTimeout(() => resolve(), 1000)); // Add a small delay
+    // Add a small delay to ensure all connections are properly closed
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   });
 
   beforeEach(async () => {
@@ -46,6 +49,13 @@ describe("Order API", () => {
         orderId: expect.any(String),
         message: "Order placed successfully",
       });
+
+      // Verify order was actually created in the database
+      const createdOrder = await db
+        .collection("orders")
+        .findOne({ userId: "user123" });
+      expect(createdOrder).toBeTruthy();
+      expect(createdOrder.quantity).toBe(2);
     });
 
     it("should return 400 when stock is unavailable", async () => {
@@ -89,37 +99,33 @@ describe("Order API", () => {
   });
 
   describe("GET /api/orders/:orderId", () => {
-    it('should return an order when it exists', async () => {
+    it("should return an order when it exists", async () => {
       const mockOrder = {
-        userId: 'user123',
+        userId: "user123",
         quantity: 2,
-        status: 'created',
-        createdAt: new Date()
+        status: "created",
+        createdAt: new Date(),
       };
-      const insertResult = await db.collection('orders').insertOne(mockOrder);
+      const insertResult = await db.collection("orders").insertOne(mockOrder);
       const orderId = insertResult.insertedId.toString();
-    
-      console.log('Inserted order ID:', orderId); // Debug log
-    
+
       const response = await request(app)
         .get(`/api/orders/${orderId}`)
-        .set('user_authentication_token', 'valid_token');
-    
-      console.log('Response body:', response.body); // Debug log
-    
+        .set("user_authentication_token", "valid_token");
+
       expect(response.statusCode).toBe(200);
       expect(response.body).toEqual({
         success: true,
         order: expect.objectContaining({
-          userId: 'user123',
+          userId: "user123",
           quantity: 2,
-          status: 'created'
-        })
+          status: "created",
+        }),
       });
     });
 
     it("should return 404 when order does not exist", async () => {
-      const nonExistentId = "5f7b1a5b9d3e2a1b1c9d1e1f";
+      const nonExistentId = new ObjectId().toString();
 
       const response = await request(app)
         .get(`/api/orders/${nonExistentId}`)
@@ -137,6 +143,31 @@ describe("Order API", () => {
 
       expect(response.statusCode).toBe(401);
       expect(response.body).toEqual({ error: "Authentication required" });
+    });
+
+    it("should return 400 for invalid orderId format", async () => {
+      const response = await request(app)
+        .get("/api/orders/invalidid")
+        .set("user_authentication_token", "valid_token");
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body).toHaveProperty("error");
+    });
+  });
+
+  describe("Error Handling", () => {
+    it("should handle internal server errors gracefully", async () => {
+      // Simulate an internal server error
+      jest
+        .spyOn(getDb().collection("orders"), "findOne")
+        .mockRejectedValue(new Error("Database error"));
+
+      const response = await request(app)
+        .get("/api/orders/5f7b1a5b9d3e2a1b1c9d1e1f")
+        .set("user_authentication_token", "valid_token");
+
+      expect(response.statusCode).toBe(500);
+      expect(response.body).toEqual({ error: "Internal server error" });
     });
   });
 });

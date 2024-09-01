@@ -2,16 +2,6 @@ const StockService = require("../services/stockService");
 const logger = require("../utils/logger");
 
 class StockController {
-  /**
-   * Initializes the stock of iPhones in the system.
-   * @function
-   * @memberof StockController
-   * @inner
-   * @param {Request} req - The incoming request.
-   * @param {Response} res - The outgoing response.
-   * @returns {Promise<Response, Error>} - A promise that resolves with the response
-   *   object or rejects with an error.
-   */
   static async initializeStock(req, res) {
     try {
       const { quantity } = req.body;
@@ -23,18 +13,6 @@ class StockController {
     }
   }
 
-  /**
-   * Returns the current available stock of iPhones.
-   *
-   * @name getCurrentStock
-   * @function
-   * @memberof StockController
-   * @inner
-   * @param {Request} req - The incoming request.
-   * @param {Response} res - The outgoing response.
-   * @returns {Promise<Response, Error>} - A promise that resolves with the response
-   *   object or rejects with an error.
-   */
   static async getCurrentStock(req, res) {
     try {
       const result = await StockService.getCurrentStock();
@@ -45,22 +23,9 @@ class StockController {
     }
   }
 
-  /**
-   * Reserves a certain quantity of iPhones for the user.
-   *
-   * @name reserveStock
-   * @function
-   * @memberof StockController
-   * @inner
-   * @param {Request} req - The incoming request.
-   * @param {Response} res - The outgoing response.
-   * @returns {Promise<Response, Error>} - A promise that resolves with the response
-   *   object or rejects with an error.
-   */
   static async reserveStock(req, res) {
     try {
       const { quantity, user_authentication_token } = req.body;
-      // Here you would typically validate the user_authentication_token, we'll just log it
       logger.info(
         `Reservation attempt with token: ${user_authentication_token}`
       );

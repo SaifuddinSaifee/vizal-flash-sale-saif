@@ -1,7 +1,7 @@
 const request = require('supertest');
 const nock = require('nock');
-const app = require('../src/app');
-const config = require('../src/config/config');
+const app = require('../app');
+const config = require('../config/config');
 
 describe('API Gateway', () => {
   beforeAll(() => {

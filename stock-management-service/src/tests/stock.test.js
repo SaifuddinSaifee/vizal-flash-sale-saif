@@ -1,5 +1,3 @@
-// src/tests/stock.test.js
-
 const request = require("supertest");
 const app = require("../app");
 const Stock = require("../models/Stock");
