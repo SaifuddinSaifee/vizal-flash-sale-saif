@@ -1,7 +1,7 @@
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
-const app = require('../src/app');
-const config = require('../src/config/config');
+const app = require('../app');
+const config = require('../config/config');
 
 describe('Auth Service', () => {
   describe('POST /api/auth/generate', () => {
@@ -79,6 +79,6 @@ describe('Auth Service', () => {
 
     expect(response.statusCode).toBe(401);
     expect(response.body).toHaveProperty('valid', false);
-    expect(response.body).toHaveProperty('error', 'Invalid token');
+    expect(response.body).toHaveProperty('error', 'Token has expired');
   });
 });
