@@ -1,16 +1,22 @@
+const axios = require('axios');
+const config = require('../config/config');
 const logger = require('../utils/logger');
 
-const authenticateUser = (req, res, next) => {
-  const token = req.header('user_authentication_token');
-  
+const authenticateUser = async (req, res, next) => {
+  const token = req.headers['user_authentication_token'];
   if (!token) {
-    logger.warn('Authentication attempt without token');
+    logger.warn('Authentication failed: No token provided');
     return res.status(401).json({ error: 'Authentication required' });
   }
 
-  // For this simplified version, we're assuming all non-empty tokens are valid instead of validatng the token here
-  req.user = { id: token.substr(0, 10) }; // Use first 10 chars of token as user ID
-  next();
+  try {
+    const response = await axios.post(`${config.AUTH_SERVICE_URL}/api/auth/validate`, { token });
+    req.user = response.data.user;
+    next();
+  } catch (error) {
+    logger.error('Token validation failed:', error);
+    res.status(401).json({ error: 'Invalid token' });
+  }
 };
 
 module.exports = authenticateUser;

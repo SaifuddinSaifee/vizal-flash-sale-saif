@@ -3,7 +3,6 @@ const logger = require('../utils/logger');
 
 const schemas = {
   createOrder: Joi.object({
-    userId: Joi.string().required(),
     quantity: Joi.number().integer().min(1).max(2).required(),
   }),
 };

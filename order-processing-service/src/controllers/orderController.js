@@ -2,9 +2,11 @@ const OrderService = require("../services/orderService");
 const logger = require("../utils/logger");
 
 class OrderController {
-  async createOrder(req, res) {
+  static async createOrder(req, res) {
     try {
-      const { userId, quantity } = req.body;
+      const { quantity } = req.body;
+      const userId = req.user.userId; // Get userId from authenticated user
+      console.log('Creating order for user:', userId);
       const result = await OrderService.createOrder(userId, quantity);
       if (result.success) {
         res.status(201).json(result);
@@ -19,7 +21,7 @@ class OrderController {
     }
   }
 
-  async getOrder(req, res) {
+  static async getOrder(req, res) {
     try {
       const { orderId } = req.params;
       const result = await OrderService.getOrder(orderId);
@@ -37,4 +39,4 @@ class OrderController {
   }
 }
 
-module.exports = new OrderController();
+module.exports = OrderController;

@@ -1,26 +1,12 @@
 const express = require('express');
-const { MongoClient } = require('mongodb');
+const { connectToDatabase } = require('./config/mongodb');
+const orderRoutes = require('./routes/orderRoutes');
 const logger = require('./utils/logger');
 
 const app = express();
-let db;
 
 app.use(express.json());
 
-async function connectToDb() {
-  const client = new MongoClient(process.env.MONGODB_URI || 'mongodb://localhost:27017/flipzon');
-  await client.connect();
-  db = client.db();
-  logger.info('Connected to MongoDB');
-  return db;
-}
-
-function getDb() {
-  return db;
-}
-
-// Move the route import here, after the db connection is established
-const orderRoutes = require('./routes/orderRoutes');
 app.use('/api/orders', orderRoutes);
 
 app.use((err, req, res, next) => {
@@ -28,12 +14,35 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-async function startServer() {
-  await connectToDb();
-  const port = process.env.PORT || 3001;
-  app.listen(port, () => {
-    logger.info(`Order Processing Service listening at http://localhost:${port}`);
+async function connectToDb() {
+  try {
+    await connectToDatabase();
+    logger.info('Connected to MongoDB');
+  } catch (error) {
+    logger.error('Failed to connect to MongoDB:', error);
+    throw error;
+  }
+}
+
+function startServer(port = process.env.PORT || 3001) {
+  return new Promise((resolve, reject) => {
+    const server = app.listen(port, () => {
+      logger.info(`Order Processing Service listening at http://localhost:${port}`);
+      resolve(server);
+    });
+    server.on('error', reject);
   });
 }
 
-module.exports = { app, connectToDb, getDb, startServer };
+
+// This block only runs if the file is executed directly (not imported as a module)
+if (require.main === module) {
+  connectToDb()
+    .then(() => startServer())
+    .catch((error) => {
+      logger.error('Failed to start server:', error);
+      process.exit(1);
+    });
+}
+
+module.exports = { app, connectToDb, startServer };

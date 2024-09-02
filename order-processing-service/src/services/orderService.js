@@ -18,7 +18,7 @@ const createOrder = async (userId, quantity) => {
       status: 'created',
     });
 
-    logger.info(`Order created for user ${userId}, quantity: ${quantity}`);
+    logger.info(`Created order with ID: ${orderId}, Order created for user ${userId}, quantity: ${quantity}`);
     return { success: true, orderId, message: 'Order placed successfully' };
   } catch (error) {
     logger.error('Error in createOrder:', error);

@@ -1,112 +1,107 @@
-const orderService = require('../../services/orderService');
-const Order = require('../../models/Order');
-const stockService = require('../../services/stockService');
+const fetch = require('node-fetch');
+const StockService = require('../../services/stockService');
 
 // Mock dependencies
-jest.mock('../../models/Order');
-jest.mock('../../services/stockService');
+jest.mock('node-fetch');
 
-describe("orderService", () => {
+describe('StockService', () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  describe("createOrder", () => {
-    it("should create an order successfully when stock is available", async () => {
+  describe('reserveStock', () => {
+    it('should successfully reserve stock', async () => {
       // Arrange
-      const userId = "user123";
       const quantity = 2;
-      const orderId = "order123";
-      stockService.reserveStock.mockResolvedValue(true);
-      Order.create.mockResolvedValue(orderId);
+      fetch.mockResolvedValue({
+        ok: true,
+        json: jest.fn().mockResolvedValue({ success: true })
+      });
 
       // Act
-      const result = await orderService.createOrder(userId, quantity);
+      const result = await StockService.reserveStock(quantity);
 
       // Assert
-      expect(result).toEqual({
-        success: true,
-        orderId,
-        message: "Order placed successfully",
-      });
-      expect(stockService.reserveStock).toHaveBeenCalledWith(quantity);
-      expect(Order.create).toHaveBeenCalledWith({
-        userId,
-        quantity,
-        status: "created",
-      });
+      expect(result).toBe(true);
+      expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/reserve'), expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ quantity })
+      }));
     });
 
-    it("should return failure when stock is unavailable", async () => {
+    it('should return false when reservation fails', async () => {
       // Arrange
-      const userId = "user123";
       const quantity = 2;
-      stockService.reserveStock.mockResolvedValue(false);
+      fetch.mockResolvedValue({
+        ok: false,
+        status: 400
+      });
 
       // Act
-      const result = await orderService.createOrder(userId, quantity);
+      const result = await StockService.reserveStock(quantity);
 
       // Assert
-      expect(result).toEqual({
-        success: false,
-        message: "Insufficient stock",
-      });
-      expect(stockService.reserveStock).toHaveBeenCalledWith(quantity);
-      expect(Order.create).not.toHaveBeenCalled();
+      expect(result).toBe(false);
     });
 
-    it("should revert stock reservation if order creation fails", async () => {
+    it('should return false when an error occurs', async () => {
       // Arrange
-      const userId = "user123";
       const quantity = 2;
-      stockService.reserveStock.mockResolvedValue(true);
-      Order.create.mockRejectedValue(new Error("Database error"));
-      stockService.revertStockReservation.mockResolvedValue(true);
+      fetch.mockRejectedValue(new Error('Network error'));
 
-      // Act & Assert
-      await expect(orderService.createOrder(userId, quantity)).rejects.toThrow(
-        "Database error"
-      );
-      expect(stockService.reserveStock).toHaveBeenCalledWith(quantity);
-      expect(Order.create).toHaveBeenCalled();
-      expect(stockService.revertStockReservation).toHaveBeenCalledWith(
-        quantity
-      );
+      // Act
+      const result = await StockService.reserveStock(quantity);
+
+      // Assert
+      expect(result).toBe(false);
     });
   });
 
-  describe("getOrder", () => {
-    it("should return an order when it exists", async () => {
+  describe('revertStockReservation', () => {
+    it('should successfully revert stock reservation', async () => {
       // Arrange
-      const orderId = "order123";
-      const orderData = { _id: orderId, userId: "user123", quantity: 2 };
-      Order.getById.mockResolvedValue(orderData);
+      const quantity = 2;
+      fetch.mockResolvedValue({
+        ok: true,
+        json: jest.fn().mockResolvedValue({ success: true })
+      });
 
       // Act
-      const result = await orderService.getOrder(orderId);
+      const result = await StockService.revertStockReservation(quantity);
 
       // Assert
-      expect(result).toEqual({
-        success: true,
-        order: orderData,
-      });
-      expect(Order.getById).toHaveBeenCalledWith(orderId);
+      expect(result).toBe(true);
+      expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/revert'), expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ quantity })
+      }));
     });
 
-    it("should return failure when order does not exist", async () => {
+    it('should return false when reversion fails', async () => {
       // Arrange
-      const orderId = "nonexistent";
-      Order.getById.mockResolvedValue(null);
+      const quantity = 2;
+      fetch.mockResolvedValue({
+        ok: false,
+        status: 400
+      });
 
       // Act
-      const result = await orderService.getOrder(orderId);
+      const result = await StockService.revertStockReservation(quantity);
 
       // Assert
-      expect(result).toEqual({
-        success: false,
-        message: "Order not found",
-      });
-      expect(Order.getById).toHaveBeenCalledWith(orderId);
+      expect(result).toBe(false);
+    });
+
+    it('should return false when an error occurs', async () => {
+      // Arrange
+      const quantity = 2;
+      fetch.mockRejectedValue(new Error('Network error'));
+
+      // Act
+      const result = await StockService.revertStockReservation(quantity);
+
+      // Assert
+      expect(result).toBe(false);
     });
   });
 });
