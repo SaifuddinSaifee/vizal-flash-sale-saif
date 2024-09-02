@@ -2,6 +2,73 @@
 
 ![System Architecture](<assets/System Architecture.svg>)
 
+# Setup
+
+## Testing Locally
+
+1. Clone the repo:
+
+```
+git clone https://github.com/SaifuddinSaifee/vizal-flash-sale-saif.git
+cd vizal-flash-sale-saif
+```
+
+2. To run the tests for each service locally
+
+**Test api-gateway service**
+
+```
+cd api-gateway
+npm install
+npm test
+```
+
+**Test auth-service service** 
+
+```
+cd auth-service
+npm install
+npm test
+```
+
+**Test order-processing-service service** 
+
+```
+cd order-processing-service
+npm install
+npm test
+```
+
+**Test stock-management-service service** 
+
+```
+cd stock-management-service
+npm install
+npm test
+```
+
+
+## Testing with docker
+
+1. Make sure you are in the root directory
+
+2. Execute the following cammand to build and run the containers
+
+```
+docker compose up --build
+```
+
+3. To run the test locally: `docker compose exec <service name> npm test`
+
+```
+docker compose exec api-gateway npm test
+docker compose exec auth-service npm test
+docker compose exec order-processing-service npm test
+docker compose exec stock-management-service npm test
+```
+
+Below mentioned an outline of how this backend system would work.
+
 # Flash Sale System Assumptions
 
 1. Sale Specifics:
@@ -15,7 +82,7 @@
 
 3. Stock Management:
    - Redis is used as the single source of truth for real-time stock levels.
-   - Stock updates are atomic operations to prevent overselling.
+   - Stock updates are atomic operations to prevent overselling or underselling.
 
 4. Order Processing:
    - Only Cash on Delivery (CoD) is available; no payment gateway integration is required.
@@ -25,7 +92,7 @@
    - MongoDB is used for persistent storage of order information and other non-real-time data.
    - We use a MongoDB replica set for data redundancy and read scaling, not sharding.
 
-6. API and Scalability:
+6. *(Yet To implemement)* API and Scalability:
    - The system starts with a single API server but is designed to scale horizontally.
    - Auto-scaling is implemented to add or remove API server instances based on load.
 
@@ -58,17 +125,17 @@
 
 15. Deployment:
     - All components, including Redis and MongoDB, are containerized for consistent deployment.
-    - Kubernetes is used for container orchestration.
+    - *(Yet To implemement)* Kubernetes is used for container orchestration.
 
 16. Network and Infrastructure:
     - A CDN is used for serving static content.
 
 17. Recovery and Backup:
-    - Regular backups of MongoDB data are performed.
-    - Redis data is considered ephemeral, with the ability to reconstruct from MongoDB if necessary.
+    - *(Yet To implemement)* Regular backups of MongoDB data are performed.
+    - *(Yet To implemement)* Redis data is considered ephemeral, with the ability to reconstruct from MongoDB if necessary.
 
 18. Load Testing:
-    - The system will undergo thorough load testing to simulate flash sale conditions before going live.
+    - *(Yet To implemement)* The system will undergo thorough load testing to simulate flash sale conditions before going live.
 
 # Flash Sale Functional Requirements
 
@@ -101,8 +168,8 @@
    - Implement WebSocket connections for pushing stock updates to connected clients.
 
 7. Sale Closure:
-   - Automatically close the sale when stock depletes or the scheduled end time is reached.
-   - Provide a summary API to get sale statistics after closure.
+   - *(Yet To implemement)* Automatically close the sale when stock depletes or the scheduled end time is reached.
+   - *(Yet To implemement)* Provide a summary API to get sale statistics after closure.
 
 8. Error Handling:
    - Implement robust error handling for various scenarios (e.g., out of stock, sale not started, sale ended).
@@ -110,16 +177,16 @@
 
 # Flash Sale Non-Functional Requirements
 
-1. Performance:
+1. *(Yet To implemement)* Performance:
    - The system should handle at least 10,000 concurrent users.
    - API response time should be under 200ms for 95% of requests.
    - The system should process at least 1000 orders per second at peak load.
 
-2. Scalability:
+2. *(Yet To implemement)* Scalability:
    - Horizontal scaling capability to handle increased load.
    - Ability to scale database reads and writes independently.
 
-3. Availability:
+3. *(Yet To implemement)* Availability:
    - 99.99% uptime during the flash sale period.
    - Implement fault tolerance and failover mechanisms.
 
@@ -127,7 +194,7 @@
    - Ensure strong consistency for stock updates and order processing.
    - Implement distributed locking to prevent race conditions.
 
-5. Security:
+5. *(Yet To implemement)* Security:
    - Implement rate limiting to prevent DDoS attacks.
    - Secure all API endpoints with proper authentication and authorization.
    - Encrypt sensitive data in transit and at rest.
@@ -136,7 +203,7 @@
    - Real-time monitoring of system health, performance metrics, and error rates.
    - Comprehensive logging for auditing and debugging purposes.
 
-7. Latency:
+7. *(Yet To implemement)* Latency:
    - Minimize latency for stock checks and order placements.
    - Implement caching strategies to reduce database load.
 
