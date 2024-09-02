@@ -1,36 +1,57 @@
-const express = require('express');
-const stockService = require('../services/stockService');
-const authMiddleware = require('../middleware/auth');
-const logger = require('../utils/logger');
-
+const express = require("express");
 const router = express.Router();
+const apiService = require("../services/apiService");
+const config = require("../config");
+const logger = require("../utils/logger");
+const authMiddleware = require("../middleware/auth");
 
-/**
- * Get current stock
- * @route GET /stock/current
- */
-router.get('/current', async (req, res) => {
+router.get("/current", async (req, res, next) => {
   try {
-    const stock = await stockService.getCurrentStock();
-    res.json(stock);
+    const response = await apiService.get(
+      `${config.stockServiceUrl}/api/stock/current`
+    );
+    res.status(200).json(response.data);
   } catch (error) {
-    logger.error('Failed to get current stock:', error);
-    res.status(500).json({ error: 'Failed to get current stock' });
+    logger.error("Error in /stock/current:", error.message);
+    if (error.code === "EAI_AGAIN") {
+      res.status(503).json({ error: "Service temporarily unavailable" });
+    } else {
+      res.status(500).json({ error: "Internal server error" });
+    }
   }
 });
 
-/**
- * Reserve stock
- * @route POST /stock/reserve
- */
-router.post('/reserve', authMiddleware, async (req, res) => {
+router.post("/initialize", authMiddleware, async (req, res, next) => {
   try {
-    const { quantity } = req.body;
-    const result = await stockService.reserveStock(quantity);
-    res.json(result);
+    const response = await apiService.post(
+      `${config.stockServiceUrl}/api/stock/initialize`,
+      req.body
+    );
+    res.status(200).json(response.data);
   } catch (error) {
-    logger.error('Stock reservation failed:', error);
-    res.status(500).json({ error: 'Failed to reserve stock' });
+    logger.error("Error in /stock/initialize:", error.message);
+    if (error.code === "EAI_AGAIN") {
+      res.status(503).json({ error: "Service temporarily unavailable" });
+    } else {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+});
+
+router.post("/reserve", authMiddleware, async (req, res, next) => {
+  try {
+    const response = await apiService.post(
+      `${config.stockServiceUrl}/api/stock/reserve`,
+      req.body
+    );
+    res.status(200).json(response.data);
+  } catch (error) {
+    logger.error("Error in /stock/reserve:", error.message);
+    if (error.code === "EAI_AGAIN") {
+      res.status(503).json({ error: "Service temporarily unavailable" });
+    } else {
+      res.status(500).json({ error: "Internal server error" });
+    }
   }
 });
 

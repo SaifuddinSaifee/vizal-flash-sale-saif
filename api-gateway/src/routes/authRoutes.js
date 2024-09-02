@@ -1,26 +1,33 @@
-const express = require('express');
-const authService = require('../services/authService');
-const logger = require('../utils/logger');
+const express = require("express");
+const apiService = require("../services/apiService");
+const config = require("../config");
+const logger = require("../utils/logger");
 
 const router = express.Router();
 
-/**
- * Validate user token
- * @route POST /auth/validate
- */
-router.post('/validate', async (req, res) => {
-  const { token } = req.body;
-  
-  if (!token) {
-    return res.status(400).json({ error: 'Token is required' });
-  }
-
+router.post("/validate", async (req, res, next) => {
   try {
-    const user = await authService.validateToken(token);
-    res.json({ valid: true, user });
+    const response = await apiService.post(
+      `${config.authServiceUrl}/api/auth/validate`,
+      req.body
+    );
+    res.status(200).json(response.data);
   } catch (error) {
-    logger.warn('Token validation failed:', error);
-    res.status(401).json({ valid: false, error: 'Invalid token' });
+    logger.error("Error in /auth/validate:", error);
+    next(error);
+  }
+});
+
+router.post("/generate", async (req, res, next) => {
+  try {
+    const response = await apiService.post(
+      `${config.authServiceUrl}/api/auth/generate`,
+      req.body
+    );
+    res.status(200).json(response.data);
+  } catch (error) {
+    logger.error("Error in /auth/generate:", error);
+    next(error);
   }
 });
 

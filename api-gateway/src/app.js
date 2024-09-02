@@ -1,56 +1,45 @@
 const express = require('express');
-const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const cors = require('cors');
-const { createProxyMiddleware } = require('http-proxy-middleware');
-const config = require('./config/config');
+const config = require('./config');
 const logger = require('./utils/logger');
+const errorHandler = require('./middleware/errorHandler');
+const authMiddleware = require('./middleware/auth');
+const authRoutes = require('./routes/authRoutes');
+const orderRoutes = require('./routes/orderRoutes');
+const stockRoutes = require('./routes/stockRoutes');
 
 const app = express();
 
-// Middleware
+// Apply security middleware
 app.use(helmet());
+
+// Enable CORS
 app.use(cors());
+
+// Parse JSON bodies
 app.use(express.json());
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: config.RATE_LIMIT_WINDOW_MS,
-  max: config.RATE_LIMIT_MAX_REQUESTS
+// Parse URL-encoded bodies
+app.use(express.urlencoded({ extended: true }));
+
+// Logging middleware
+app.use((req, res, next) => {
+  logger.info(`${req.method} ${req.url}`);
+  next();
 });
-app.use(limiter);
 
-// Auth Service Proxy
-app.use('/auth', createProxyMiddleware({ 
-  target: config.AUTH_SERVICE_URL,
-  changeOrigin: true,
-  pathRewrite: {'^/auth' : '/api/auth'}
-}));
+// Health check route
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK' });
+});
 
-// Order Service Proxy
-app.use('/orders', createProxyMiddleware({ 
-  target: config.ORDER_SERVICE_URL,
-  changeOrigin: true,
-  pathRewrite: {'^/orders' : '/api/orders'}
-}));
-
-// Stock Service Proxy
-app.use('/stock', createProxyMiddleware({ 
-  target: config.STOCK_SERVICE_URL,
-  changeOrigin: true,
-  pathRewrite: {'^/stock' : '/api/stock'}
-}));
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/orders', authMiddleware, orderRoutes);
+app.use('/api/stock', stockRoutes);
 
 // Error handling middleware
-app.use((err, req, res, next) => {
-  logger.error('Unhandled error:', err);
-  res.status(500).json({ error: 'Internal server error' });
-});
-
-// Start the server
-const PORT = config.PORT || 3000;
-app.listen(PORT, () => {
-  logger.info(`API Gateway running on port ${PORT}`);
-});
+app.use(errorHandler);
 
 module.exports = app;
