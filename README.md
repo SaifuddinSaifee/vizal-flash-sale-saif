@@ -83,10 +83,49 @@ minikube start
 kubectl config view
 ```
 
-4. Once you have a working Kubernetes cluster, apply the manifests
+4. Create the namespace separately
 
 ```
-kubectl apply -f k8s/
+kubectl create namespace flash-sale
+```
+
+5. Once you have a working Kubernetes cluster, apply the manifests
+
+```
+kubectl apply -f k8s/ --namespace=flash-sale
+```
+
+or 
+
+```
+kubectl apply -f k8s/namespace.yaml
+kubectl apply -f k8s/jwt-secret.yaml -n flash-sale
+kubectl apply -f k8s/mongodb.yaml -n flash-sale
+kubectl apply -f k8s/redis.yaml -n flash-sale
+kubectl apply -f k8s/api-gateway.yaml -n flash-sale
+kubectl apply -f k8s/auth-service.yaml -n flash-sale
+kubectl apply -f k8s/order-processing.yaml -n flash-sale
+kubectl apply -f k8s/stock-management.yaml -n flash-sale
+kubectl apply -f k8s/ingress.yaml -n flash-sale
+kubectl apply -f k8s/hpa.yaml -n flash-sale
+```
+
+6. After applying these, Check the status of the resources
+
+```
+kubectl get all -n flash-sale
+```
+
+7. To monitor the auto-scaling in action
+
+```
+kubectl get hpa -n flash-sale -w
+```
+
+8. To scale any service horizontally, you can use the `kubectl scale` command.
+
+```
+kubectl scale deployment api-gateway -n flash-sale --replicas=5
 ```
 
 Below mentioned an outline of how this backend system aims to work.
