@@ -16,9 +16,18 @@ app.use('/api/auth', authRoutes);
 
 app.use(errorHandler);
 
-const PORT = config.PORT;
-app.listen(PORT, () => {
-  logger.info(`Auth Service running on port ${PORT}`);
-});
+const startServer = (port = config.PORT) => {
+  return new Promise((resolve) => {
+    const server = app.listen(port, () => {
+      logger.info(`Auth Service running on port ${port}`);
+      resolve(server);
+    });
+  });
+};
 
-module.exports = app;
+// Only start the server if this file is run directly
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = { app, startServer };

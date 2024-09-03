@@ -1,21 +1,36 @@
 const request = require('supertest');
-const jwt = require('jsonwebtoken');
-const app = require('../app');
+const { app, startServer } = require('../app');
+const authService = require('../services/authService');
 const config = require('../config/config');
+const jwt = require('jsonwebtoken');
 
 describe('Auth Service', () => {
+  let server;
+
+  beforeAll(async () => {
+    server = await startServer(0); // Use port 0 to get a random available port
+  });
+
+  afterAll((done) => {
+    if (server) {
+      server.close(done);
+    } else {
+      done();
+    }
+  });
+
   describe('POST /api/auth/generate', () => {
     it('should generate a valid token', async () => {
       const response = await request(app)
         .post('/api/auth/generate')
-        .send({ userId: 'testUser' });
+        .send({ userId: '123' });
 
-      expect(response.statusCode).toBe(200);
+      expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('token');
 
-      // Verify the token
-      const decodedToken = jwt.verify(response.body.token, config.JWT_SECRET);
-      expect(decodedToken).toHaveProperty('userId', 'testUser');
+      const validationResult = authService.validateToken(response.body.token);
+      expect(validationResult.isValid).toBe(true);
+      expect(validationResult.user.userId).toBe('123');
     });
 
     it('should return 400 if userId is missing', async () => {
@@ -23,37 +38,29 @@ describe('Auth Service', () => {
         .post('/api/auth/generate')
         .send({});
 
-      expect(response.statusCode).toBe(400);
+      expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('error', 'User ID is required');
     });
   });
 
   describe('POST /api/auth/validate', () => {
     it('should validate a valid token', async () => {
-      // Generate a valid token first
-      const generateResponse = await request(app)
-        .post('/api/auth/generate')
-        .send({ userId: 'testUser' });
-
-      const { token } = generateResponse.body;
-
-      const validateResponse = await request(app)
+      const token = authService.generateToken('123');
+      const response = await request(app)
         .post('/api/auth/validate')
         .send({ token });
 
-      expect(validateResponse.statusCode).toBe(200);
-      expect(validateResponse.body).toHaveProperty('valid', true);
-      expect(validateResponse.body.user).toHaveProperty('userId', 'testUser');
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ valid: true, user: { userId: '123' } });
     });
 
     it('should return 401 for an invalid token', async () => {
       const response = await request(app)
         .post('/api/auth/validate')
-        .send({ token: 'invalidToken' });
+        .send({ token: 'invalid-token' });
 
-      expect(response.statusCode).toBe(401);
-      expect(response.body).toHaveProperty('valid', false);
-      expect(response.body).toHaveProperty('error', 'Invalid token');
+      expect(response.status).toBe(401);
+      expect(response.body).toEqual({ valid: false, error: 'Invalid token' });
     });
 
     it('should return 400 if token is missing', async () => {
@@ -61,8 +68,8 @@ describe('Auth Service', () => {
         .post('/api/auth/validate')
         .send({});
 
-      expect(response.statusCode).toBe(400);
-      expect(response.body).toHaveProperty('error', 'Token is required');
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual({ valid: false, error: 'Token is required' });
     });
   });
 
