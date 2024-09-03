@@ -42,4 +42,19 @@ app.use('/api/stock', stockRoutes);
 // Error handling middleware
 app.use(errorHandler);
 
-module.exports = app;
+const startServer = (port = process.env.PORT || 3000) => {
+  return new Promise((resolve) => {
+    const server = app.listen(port, () => {
+      console.log(`API Gateway running on port ${port}`);
+      logger.info(`API Gateway running on port ${port}`);
+      resolve(server);
+    });
+  });
+};
+
+// Only start the server if this file is run directly
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = { app, startServer };

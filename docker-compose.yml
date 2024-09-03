@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   api-gateway:
     build: ./api-gateway
@@ -9,10 +7,10 @@ services:
       - AUTH_SERVICE_URL=http://auth-service:3002
       - ORDER_SERVICE_URL=http://order-processing-service:3001
       - STOCK_SERVICE_URL=http://stock-management-service:3003
-    depends_on:
-      - auth-service
-      - order-processing-service
-      - stock-management-service
+    # depends_on:
+    #   - auth-service
+    #   - order-processing-service
+    #   - stock-management-service
 
   auth-service:
     build: ./auth-service

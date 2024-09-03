@@ -1,15 +1,7 @@
 const request = require("supertest");
-const jwt = require("jsonwebtoken");
+const { app, startServer } = require("../app");
 const config = require("../config");
-
-// Mock the entire axios module
-jest.mock("axios");
-
-// Mock the logger
-jest.mock("../utils/logger", () => ({
-  info: jest.fn(),
-  error: jest.fn(),
-}));
+const jwt = require("jsonwebtoken");
 
 // Mock the ApiService
 jest.mock("../services/apiService", () => ({
@@ -29,10 +21,21 @@ jest.mock("../middleware/auth", () => (req, res, next) => {
   }
 });
 
-// Import the app after mocking dependencies
-const app = require("../app");
-
 describe("Order Routes", () => {
+  let server;
+
+  beforeAll(async () => {
+    server = await startServer(0); // Use port 0 to get a random available port
+  });
+
+  afterAll((done) => {
+    if (server) {
+      server.close(done);
+    } else {
+      done();
+    }
+  });
+
   const generateToken = () =>
     jwt.sign({ userId: "123", role: "user" }, config.jwtSecret);
 

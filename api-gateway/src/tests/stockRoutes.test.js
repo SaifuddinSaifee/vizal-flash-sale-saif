@@ -1,5 +1,5 @@
 const request = require("supertest");
-const app = require("../app");
+const { app, startServer } = require("../app");
 const config = require("../config");
 const jwt = require("jsonwebtoken");
 
@@ -22,6 +22,20 @@ jest.mock("../middleware/auth", () => (req, res, next) => {
 });
 
 describe("Stock Routes", () => {
+  let server;
+
+  beforeAll(async () => {
+    server = await startServer(0); // Use port 0 to get a random available port
+  });
+
+  afterAll((done) => {
+    if (server) {
+      server.close(done);
+    } else {
+      done();
+    }
+  });
+
   const generateToken = () =>
     jwt.sign({ userId: "123", role: "user" }, config.jwtSecret);
 
@@ -31,21 +45,21 @@ describe("Stock Routes", () => {
 
   describe("GET /api/stock/current", () => {
     it("should return current stock", async () => {
-      apiService.get.mockResolvedValue({ data: { stock: 100 } });
+      apiService.get.mockResolvedValueOnce({ data: { available: 100 } });
 
       const response = await request(app).get("/api/stock/current");
 
       expect(response.status).toBe(200);
-      expect(response.body).toEqual({ stock: 100 });
+      expect(response.body).toEqual({ available: 100 });
       expect(apiService.get).toHaveBeenCalledWith(
         `${config.stockServiceUrl}/api/stock/current`
       );
     });
 
     it("should handle service unavailable error", async () => {
-      const error = new Error("Service unavailable");
+      const error = new Error("Service Unavailable");
       error.code = "EAI_AGAIN";
-      apiService.get.mockRejectedValue(error);
+      apiService.get.mockRejectedValueOnce(error);
 
       const response = await request(app).get("/api/stock/current");
 
@@ -54,42 +68,65 @@ describe("Stock Routes", () => {
         error: "Service temporarily unavailable",
       });
     });
+
+    it("should handle internal server error", async () => {
+      apiService.get.mockRejectedValueOnce(new Error("Internal Server Error"));
+
+      const response = await request(app).get("/api/stock/current");
+
+      expect(response.status).toBe(500);
+      expect(response.body).toEqual({ error: "Internal server error" });
+    });
   });
 
   describe("POST /api/stock/initialize", () => {
-    it("should initialize stock", async () => {
-      apiService.post.mockResolvedValue({
-        data: { success: true, message: "Stock initialized" },
+    it("should initialize stock successfully", async () => {
+      apiService.post.mockResolvedValueOnce({
+        data: { success: true, initialStock: 1000 },
       });
 
       const response = await request(app)
         .post("/api/stock/initialize")
         .set("Authorization", `Bearer ${generateToken()}`)
-        .send({ quantity: 100 });
+        .send({ quantity: 1000 });
 
       expect(response.status).toBe(200);
-      expect(response.body).toEqual({
-        success: true,
-        message: "Stock initialized",
-      });
+      expect(response.body).toEqual({ success: true, initialStock: 1000 });
       expect(apiService.post).toHaveBeenCalledWith(
         `${config.stockServiceUrl}/api/stock/initialize`,
-        { quantity: 100 }
+        { quantity: 1000 }
       );
     });
 
     it("should return 401 if no token provided", async () => {
       const response = await request(app)
         .post("/api/stock/initialize")
-        .send({ quantity: 100 });
+        .send({ quantity: 1000 });
 
       expect(response.status).toBe(401);
+      expect(response.body).toEqual({ error: "Unauthorized" });
+    });
+
+    it("should handle service unavailable error", async () => {
+      const error = new Error("Service Unavailable");
+      error.code = "EAI_AGAIN";
+      apiService.post.mockRejectedValueOnce(error);
+
+      const response = await request(app)
+        .post("/api/stock/initialize")
+        .set("Authorization", `Bearer ${generateToken()}`)
+        .send({ quantity: 1000 });
+
+      expect(response.status).toBe(503);
+      expect(response.body).toEqual({
+        error: "Service temporarily unavailable",
+      });
     });
   });
 
   describe("POST /api/stock/reserve", () => {
-    it("should reserve stock", async () => {
-      apiService.post.mockResolvedValue({
+    it("should reserve stock successfully", async () => {
+      apiService.post.mockResolvedValueOnce({
         data: { success: true, reserved: 5 },
       });
 
@@ -112,19 +149,23 @@ describe("Stock Routes", () => {
         .send({ quantity: 5 });
 
       expect(response.status).toBe(401);
+      expect(response.body).toEqual({ error: "Unauthorized" });
     });
-  });
 
-  describe("Error handling", () => {
-    it("should handle stock service errors", async () => {
-      apiService.get.mockRejectedValue({
-        response: { status: 500, data: { error: "Service error" } },
+    it("should handle service unavailable error", async () => {
+      const error = new Error("Service Unavailable");
+      error.code = "EAI_AGAIN";
+      apiService.post.mockRejectedValueOnce(error);
+
+      const response = await request(app)
+        .post("/api/stock/reserve")
+        .set("Authorization", `Bearer ${generateToken()}`)
+        .send({ quantity: 5 });
+
+      expect(response.status).toBe(503);
+      expect(response.body).toEqual({
+        error: "Service temporarily unavailable",
       });
-
-      const response = await request(app).get("/api/stock/current");
-
-      expect(response.status).toBe(500);
-      expect(response.body).toEqual({ error: "Internal server error" });
     });
   });
 });
