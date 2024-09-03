@@ -153,7 +153,7 @@ Below mentioned an outline of how this backend system aims to work.
    - MongoDB is used for persistent storage of order information and other non-real-time data.
    - We use a MongoDB replica set for data redundancy and read scaling, not sharding.
 
-6. *(Yet To implemement)* API and Scalability:
+6. API and Scalability:
    - The system starts with a single API server but is designed to scale horizontally.
    - Auto-scaling is implemented to add or remove API server instances based on load.
 
@@ -186,14 +186,13 @@ Below mentioned an outline of how this backend system aims to work.
 
 15. Deployment:
     - All components, including Redis and MongoDB, are containerized for consistent deployment.
-    - *(Yet To implemement)* Kubernetes is used for container orchestration.
+    - Kubernetes is used for container orchestration.
 
 16. Network and Infrastructure:
     - A CDN is used for serving static content.
 
 17. Recovery and Backup:
-    - *(Yet To implemement)* Regular backups of MongoDB data are performed.
-    - *(Yet To implemement)* Redis data is considered ephemeral, with the ability to reconstruct from MongoDB if necessary.
+    - Regular backups of MongoDB data are performed.
 
 18. Load Testing:
     - *(Yet To implemement)* The system will undergo thorough load testing to simulate flash sale conditions before going live.
@@ -243,11 +242,11 @@ Below mentioned an outline of how this backend system aims to work.
    - API response time should be under 200ms for 95% of requests.
    - The system should process at least 1000 orders per second at peak load.
 
-2. *(Yet To implemement)* Scalability:
+2. Scalability:
    - Horizontal scaling capability to handle increased load.
    - Ability to scale database reads and writes independently.
 
-3. *(Yet To implemement)* Availability:
+3. Availability:
    - 99.99% uptime during the flash sale period.
    - Implement fault tolerance and failover mechanisms.
 
@@ -264,7 +263,7 @@ Below mentioned an outline of how this backend system aims to work.
    - Real-time monitoring of system health, performance metrics, and error rates.
    - Comprehensive logging for auditing and debugging purposes.
 
-7. *(Yet To implemement)* Latency:
+7. Latency:
    - Minimize latency for stock checks and order placements.
    - Implement caching strategies to reduce database load.
 
