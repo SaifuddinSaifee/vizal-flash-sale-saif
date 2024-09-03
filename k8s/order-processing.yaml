@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-processing
+  namespace: flash-sale
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: order-processing
+  template:
+    metadata:
+      labels:
+        app: order-processing
+    spec:
+      containers:
+      - name: order-processing
+        image: your-registry/order-processing:latest
+        ports:
+        - containerPort: 3001
+        env:
+        - name: MONGODB_URI
+          value: "mongodb://mongodb:27017/order_db"
+        - name: STOCK_SERVICE_URL
+          value: "http://stock-management-service:3003/api/stock"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-processing-service
+  namespace: flash-sale
+spec:
+  selector:
+    app: order-processing
+  ports:
+    - protocol: TCP
+      port: 3001
+      targetPort: 3001

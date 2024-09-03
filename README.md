@@ -67,7 +67,29 @@ docker compose exec order-processing-service npm test
 docker compose exec stock-management-service npm test
 ```
 
-Below mentioned an outline of how this backend system would work.
+## Testing with K8s
+
+1. Make sure you are in the root directory
+
+2. Start a minikube with 
+
+```
+minikube start
+```
+
+3. After setting up a cluster, make sure kubectl is configured to use it
+
+```
+kubectl config view
+```
+
+4. Once you have a working Kubernetes cluster, apply the manifests
+
+```
+kubectl apply -f k8s/
+```
+
+Below mentioned an outline of how this backend system aims to work.
 
 # Flash Sale System Assumptions
 
